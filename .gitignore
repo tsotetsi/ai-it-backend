@@ -1,12 +1,11 @@
 # ENV files.
 /venv
 
-# Python binary files.
-/__pycache__/
-
-/.pytest_cache
-
-/tests/__pycache__/
+# Python binary files.(Python, tests, api_sql, services)
+**/__pycache__/
 
 # IDE files.
 /.idea
+
+# Databases.
+*.db
