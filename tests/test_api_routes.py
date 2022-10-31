@@ -1,5 +1,6 @@
 import unittest
 from fastapi.testclient import TestClient
+from fastapi import status
 
 from app import app, API_VERSION, API_ENV
 
@@ -17,6 +18,6 @@ class TestApplicationRoot(unittest.TestCase):
             "/"
         )
         data = response.json()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data["api_version"], API_VERSION)
-        self.assertEqual(data["API_ENV"], API_ENV)
+        self.assertEqual(data["environment"], API_ENV)
