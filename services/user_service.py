@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from sqlalchemy import select
 
 from api_sql.models import User
 
@@ -27,11 +27,14 @@ class UserService:
     """
     @staticmethod
     def fetch_by_id(db: Session, _id):
-        return db.query(User).filter(User.id == _id).one()
+        user = db.query(User).filter(User.id == _id).all()
+        if user:
+            return user
+        return []
 
     """
     Get all users.
     """
     @staticmethod
     def fetch_all(db: Session):
-        db.query(User).all()
+        return db.query(User).all()
