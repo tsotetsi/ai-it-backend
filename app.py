@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import FastAPI, status, Depends, File, UploadFile
+from fastapi import FastAPI, status, Depends, File, UploadFile, HTTPException
 from sqlalchemy.orm import Session
 
 from api_sql import models
@@ -9,6 +9,8 @@ from services.tracker_service import TrackerService
 from services.comment_service import CommentService
 from db import get_db, engine
 from api_sql import schemas
+
+from dotenv import load_dotenv
 
 
 API_VERSION, API_ENV = "0.0.1", "development"
@@ -35,12 +37,27 @@ def root():
 @app.post("/users", tags=["Users"], response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 async def create_user(user_request: schemas.UserCreate, db: Session = Depends(get_db)):
     """
-    Create a new user
-    :param user_request: user request data
-    :param db: db connection instance
-    :return: str
+    Create a new user.
+    :param user_request: user request data.
+    :param db: db connection instance.
+    :return: str.
     """
-    return await UserService.create(user_request, db)
+    db_user = UserService.fetch_by_email(db, user_request.email)
+    if not db_user:
+        return await UserService.create(user_request, db)
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="%s email address already exist in our system." % (user_request.email, ))
+
+
+@app.get("/users", tags=["Users"], response_model=List[schemas.User], status_code=status.HTTP_200_OK)
+async def get_all_users(db: Session = Depends(get_db)):
+    """
+    Get list of all users.
+    :param db: db connection instance.
+    :return: list of users.
+    """
+    return UserService.fetch_all(db)
 
 
 @app.get("/users/{_id}", tags=["Users"], response_model=List[schemas.User], status_code=status.HTTP_200_OK)
@@ -62,7 +79,13 @@ async def create_tracker(tracker_request: schemas.TrackerCreate, db: Session = D
     :param db: db connection instance.
     :return: str.
     """
-    return await TrackerService.create(tracker_request, db)
+    user_db = UserService.fetch_by_id(db, tracker_request.user_id)
+    if len(user_db) > 0:
+        return await TrackerService.create(tracker_request, db)
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="The provided user_id does not exist in our system."
+    )
 
 
 @app.get("/trackers/fetch_all/{user_id}", tags=["Trackers"], response_model=List[schemas.Tracker], status_code=status.HTTP_200_OK)

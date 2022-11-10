@@ -38,3 +38,10 @@ class UserService:
     @staticmethod
     def fetch_all(db: Session):
         return db.query(User).all()
+
+    """
+    Get user by email.
+    """
+    @staticmethod
+    def fetch_by_email(db: Session, email: str):
+        return db.query(User).filter(User.email == email).first()

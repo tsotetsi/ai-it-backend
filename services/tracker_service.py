@@ -29,6 +29,13 @@ class TrackerService:
         return []
 
     """
+    Fetch tracker by id
+    """
+    @staticmethod
+    def fetch_tracker_by_id(tracker_):
+        pass
+
+    """
     Upload tracker attachment.
     """
     @staticmethod
