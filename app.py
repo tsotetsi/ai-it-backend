@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import FastAPI, status, Depends, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from api_sql import models
@@ -24,6 +25,19 @@ app = FastAPI(
 )
 
 models.Base.metadata.create_all(bind=engine)
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000"  # Default react url.
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/", status_code=status.HTTP_200_OK)
