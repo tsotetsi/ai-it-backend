@@ -110,7 +110,13 @@ async def fetch_all(user_id: int, db: Session = Depends(get_db)):
     :param db: db connections instance.
     :return: str.
     """
-    return TrackerService.fetch_all_user_trackers(user_id, db)
+    user_db = UserService.fetch_by_id(db, user_id)
+    if len(user_db) > 0:
+        return TrackerService.fetch_all_user_trackers(user_id, db)
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="The provided user_id does not exist in our system."
+    )
 
 
 @app.post("/trackers/upload_file/{tracker_id}", tags=["Trackers"], status_code=status.HTTP_201_CREATED)
