@@ -106,13 +106,31 @@ async def create_tracker(tracker_request: schemas.TrackerCreate, db: Session = D
 async def fetch_all(user_id: int, db: Session = Depends(get_db)):
     """
     Fetch user trackers.
-    :param user_id: logged-in user_id
+    :param user_id: logged-in user_id.
     :param db: db connections instance.
-    :return: str.
+    :return: list of all user trackers.
     """
     user_db = UserService.fetch_by_id(db, user_id)
     if len(user_db) > 0:
         return TrackerService.fetch_all_user_trackers(user_id, db)
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="The provided user_id does not exist in our system."
+    )
+
+
+@app.get("/trackers/fetch_one/{user_id}/{tracker_id}", tags=["Trackers"], response_model=list[schemas.Tracker], status_code=status.HTTP_200_OK)
+async def fetch_one(user_id: int, tracker_id: int, db: Session = Depends(get_db)):
+    """
+    Fetch single user tracker.
+    :param user_id: logged-in user_id.
+    :param tracker_id: user tracker_id.
+    :param db: db connection instance.
+    :return: dict of results
+    """
+    user_db = UserService.fetch_by_id(db, user_id)
+    if any(user_db):
+        return TrackerService.fetch_tracker_by_id(tracker_id, db)
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="The provided user_id does not exist in our system."

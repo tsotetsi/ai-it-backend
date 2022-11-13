@@ -29,11 +29,14 @@ class TrackerService:
         return []
 
     """
-    Fetch tracker by id
+    Fetch user tracker by it's id.
     """
     @staticmethod
-    def fetch_tracker_by_id(tracker_):
-        pass
+    def fetch_tracker_by_id(tracker_id: int, db: Session):
+        tracker = db.query(Tracker).filter(Tracker.id == tracker_id).all()
+        if tracker:
+            return tracker
+        return []
 
     """
     Upload tracker attachment.
