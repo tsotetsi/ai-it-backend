@@ -1,15 +1,27 @@
 from typing import List
 
 from fastapi import FastAPI, status, Depends, File, UploadFile, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from api_sql import models
+
 from services.user_service import UserService
 from services.tracker_service import TrackerService
 from services.comment_service import CommentService
+
 from db import get_db, engine
 from api_sql import schemas
+
+from auth.deps import get_current_user
+
+from auth.utils import (
+    get_hashed_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token
+)
 
 from dotenv import load_dotenv
 
@@ -48,20 +60,59 @@ def root():
     }
 
 
-@app.post("/users", tags=["Users"], response_model=schemas.User, status_code=status.HTTP_201_CREATED)
-async def create_user(user_request: schemas.UserCreate, db: Session = Depends(get_db)):
+@app.get("/me", tags=["Users"], response_model=schemas.UserOut)
+async def get_me(user: models.User = Depends(get_current_user)):
     """
-    Create a new user.
+    Get currently logged-in User.
+    :param user: User.
+    :return: db user instance.
+    """
+    return user
+
+
+@app.post('/users/login', tags=["Users"], response_model=schemas.TokenSchema)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """
+    Create access and refresh tokens for use.
+    :param form_data:
+    :param db:
+    :return:
+    """
+    db_user = UserService.fetch_by_email(db, form_data.username)
+    if db_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password."
+        )
+
+    hashed_pass = db_user.password
+    if not verify_password(form_data.password, hashed_pass):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password."
+        )
+
+    return {
+        "access_token": create_access_token(db_user.email),
+        "refresh_token": create_refresh_token(db_user.email),
+    }
+
+
+@app.post("/users/signup", tags=["Users"], response_model=schemas.UserOut, status_code=status.HTTP_201_CREATED)
+async def signup_user(user_request: schemas.UserCreate, db: Session = Depends(get_db)):
+    """
+    Sign-up new user.
     :param user_request: user request data.
-    :param db: db connection instance.
-    :return: str.
+    :param db: db connection instance
+    :return: str
     """
     db_user = UserService.fetch_by_email(db, user_request.email)
-    if not db_user:
-        return await UserService.create(user_request, db)
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="%s email address already exist in our system." % (user_request.email, ))
+    if db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="%s email address already exist in our system." % (user_request.email,)
+        )
+    return await UserService.signup(user_request, db)
 
 
 @app.get("/users", tags=["Users"], response_model=List[schemas.User], status_code=status.HTTP_200_OK)

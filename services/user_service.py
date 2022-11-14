@@ -1,22 +1,22 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from api_sql.models import User
+from auth.utils import get_hashed_password
 
 
 class UserService:
     """UserService for user CRUD."""
 
     """
-    Create a new user.
+    Signup a new user.
     """
     @staticmethod
-    async def create(user, db: Session):
+    async def signup(user, db: Session):
         new_user = User(
             name=user.name,
             surname=user.surname,
             email=user.email,
-            password=user.password
+            password=get_hashed_password(user.password)
         )
         db.add(new_user)
         db.commit()

@@ -7,8 +7,8 @@ from pydantic import BaseModel, EmailStr, AnyUrl
 class UserBase(BaseModel):
     name: str
     surname: str
-    email: EmailStr
     password: str
+    email: str
 
 
 class User(UserBase):
@@ -25,6 +25,29 @@ class UserCreate(UserBase):
     Schema for creating a new user.
     """
     pass
+
+
+class TokenSchema(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
+class UserOut(User):
+    pass
+
+
+class UserAuth(BaseModel):
+    email: str
+    password: str
+
+
+class TokenPayLoad(BaseModel):
+    sub: str = None
+    exp: int = None
+
+
+class SystemUser(User):
+    password: str
 
 
 class CommentBase(BaseModel):
