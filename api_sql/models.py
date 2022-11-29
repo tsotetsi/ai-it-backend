@@ -19,7 +19,7 @@ class User(Base):
     modified = Column(DATETIME, nullable=False, default=datetime.now())
 
     def __repr__(self):
-        return 'UserModel(name=%s, surname=%s, created=%s, modified=%s)' % (self.name, self.surname, self.created, self.modified)
+        return 'UserModel(id=%s, name=%s, surname=%s, created=%s, modified=%s)' % (self.id, self.name, self.surname, self.created, self.modified)
 
 
 class Comment(Base):
@@ -33,7 +33,7 @@ class Comment(Base):
     created = Column(DATETIME, nullable=False, default=datetime.now())
 
     def __repr__(self):
-        return 'CommentModel(text=%s)' % (self.text,)
+        return 'CommentModel(text=%s, tracker_id=%s)' % (self.text, self.tracker_id)
 
 
 class Tracker(Base):

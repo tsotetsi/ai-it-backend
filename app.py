@@ -40,14 +40,19 @@ models.Base.metadata.create_all(bind=engine)
 
 origins = [
     "http://localhost",
-    "http://localhost:3000"  # Default react url.
+    "http://localhost:3000"  # Default ReactJS entry url.
+]
+
+methods = [
+    "GET",
+    "POST"
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=methods,
     allow_headers=["*"],
 )
 
@@ -91,10 +96,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password."
         )
-
     return {
         "access_token": create_access_token(db_user.email),
         "refresh_token": create_refresh_token(db_user.email),
+        "user_id": db_user.id
     }
 
 
@@ -125,7 +130,7 @@ async def get_all_users(db: Session = Depends(get_db)):
     return UserService.fetch_all(db)
 
 
-@app.get("/users/{_id}", tags=["Users"], response_model=List[schemas.User], status_code=status.HTTP_200_OK)
+@app.get("/users/detailed/{_id}", tags=["Users"], response_model=List[schemas.User], status_code=status.HTTP_200_OK)
 async def get_user(_id: int, db: Session = Depends(get_db)):
     """
     Get user details.
@@ -204,16 +209,22 @@ async def comments(comment_request: schemas.CommentCreate, db: Session = Depends
     return await CommentService.create(comment_request, db)
 
 
-@app.post("/trackers/comments/fetch_tracker_comments",
-          tags=["Trackers"],
-          response_model=List[schemas.Comment],
-          status_code=status.HTTP_200_OK)
+@app.get("/trackers/comments/fetch_tracker_comments",
+         tags=["Trackers"],
+         response_model=List[schemas.Comment],
+         status_code=status.HTTP_200_OK)
 async def fetch_all_tracker_comments(tracker_id: int, user_id: int, db: Session = Depends(get_db)):
     """
     Fetch tracker comments.
-    :param tracker_id: trackeid
-    :param user_id: user_id
+    :param tracker_id: tracker_id.
+    :param user_id: user_id.
     :param db: db connection instance.
     :return: str
     """
-    return CommentService.fetch_all_tracker_comments(tracker_id, user_id, db)
+    user_db = UserService.fetch_by_id(db, user_id)
+    if any(user_db):
+        return CommentService.fetch_all_tracker_comments(tracker_id, db)
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="The provided user_id does not exist in our system."
+    )

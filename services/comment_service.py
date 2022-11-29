@@ -22,7 +22,7 @@ class CommentService:
     """
 
     @staticmethod
-    def fetch_all_tracker_comments(tracker_id: int, user_id: int, db: Session):
+    def fetch_all_tracker_comments(tracker_id: int, db: Session):
         comments = db.query(Comment).filter(Comment.tracker_id == tracker_id).all()
         if comments:
             return comments
