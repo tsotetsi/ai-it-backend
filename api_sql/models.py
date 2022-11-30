@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, TIMESTAMP
 
 
 from db import Base
@@ -15,8 +15,8 @@ class User(Base):
     surname = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True, index=True)
     password = Column(String, nullable=False)
-    created = Column(DATETIME, nullable=False, default=datetime.now())
-    modified = Column(DATETIME, nullable=False, default=datetime.now())
+    created = Column(TIMESTAMP, nullable=False, default=datetime.now())
+    modified = Column(TIMESTAMP, nullable=False, default=datetime.now())
 
     def __repr__(self):
         return 'UserModel(id=%s, name=%s, surname=%s, created=%s, modified=%s)' % (self.id, self.name, self.surname, self.created, self.modified)
@@ -30,7 +30,7 @@ class Comment(Base):
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, nullable=False)
     tracker_id = Column(Integer, ForeignKey("trackers.id"))
-    created = Column(DATETIME, nullable=False, default=datetime.now())
+    created = Column(TIMESTAMP, nullable=False, default=datetime.now())
 
     def __repr__(self):
         return 'CommentModel(text=%s, tracker_id=%s)' % (self.text, self.tracker_id)
@@ -47,8 +47,8 @@ class Tracker(Base):
     description = Column(Text, nullable=True, default=None)
     url = Column(String, nullable=True, default=None)
     attachment = Column(String, nullable=True)
-    created = Column(DATETIME, nullable=False, default=datetime.now())
-    modified = Column(DATETIME, nullable=False, default=datetime.now())
+    created = Column(TIMESTAMP, nullable=False, default=datetime.now())
+    modified = Column(TIMESTAMP, nullable=False, default=datetime.now())
 
     def __repr__(self):
         return 'TrackerModel(title=%s, description=%s)' % (self.title, self.description)
